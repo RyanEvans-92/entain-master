@@ -80,6 +80,13 @@ func (r *racesRepo) applyFilter(query string, filter *racing.ListRacesRequestFil
 		}
 	}
 
+	// Check if visible only has been supplied as true. If false,
+	// or omitted, all races will be returned.
+	if filter.VisibleOnly {
+		clauses = append(clauses, "visible = ?")
+		args = append(args, true)
+	}
+
 	if len(clauses) != 0 {
 		query += " WHERE " + strings.Join(clauses, " AND ")
 	}
