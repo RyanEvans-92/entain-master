@@ -63,6 +63,7 @@ func (r *racesRepo) List(filter *racing.ListRacesRequestFilter) ([]*racing.Race,
 }
 
 func (r *racesRepo) applyFilter(query string, filter *racing.ListRacesRequestFilter) (string, []interface{}) {
+	illegalCharFlag := false
 	var (
 		clauses []string
 		args    []interface{}
@@ -89,6 +90,65 @@ func (r *racesRepo) applyFilter(query string, filter *racing.ListRacesRequestFil
 
 	if len(clauses) != 0 {
 		query += " WHERE " + strings.Join(clauses, " AND ")
+	}
+
+	query += " ORDER BY "
+
+	orderByStr := "advertised_start_time"
+
+	// Function to check if an illegal character is entered by the user.
+	strContainsIllegalChar := func(str string) bool {
+		for i := 0; i < len(str); i++ {
+			if str[i] == byte(';') {
+				return true
+			}
+		}
+		return false
+	}
+
+	/*	If the user supplied string can is a key that can be sorted by; if
+		no sort_by field is supplied, order will default to by advertised_start_time.
+		In the event a value that cannot be sorted by is supplied, the code already
+		return an error code 2 for unknown strings, and code 3 for unsupported data
+		types.
+	*/
+	if s := strings.ToLower(filter.SortBy); len(s) > 0 {
+		query += s
+	} else if strContainsIllegalChar(s) {
+		illegalCharFlag = true
+		query += orderByStr
+	} else {
+		query += orderByStr
+	}
+
+	/*	Since this is a binary option of ascending or descending order
+		the code could be made more efficient by making sort_by a boolean
+		rather than a string. However, it will make it easier for users if
+		they can specify in natural language rather than 0 or 1. The default
+		order, if not specified will be descending, making the most recent
+		races appear first.
+	*/
+
+	if s := strings.ToUpper(filter.Order); s == "ASC" || s == "ASCENDING" {
+		query += " ASC"
+	} else if strContainsIllegalChar(s) {
+		illegalCharFlag = true
+		query += " DESC"
+	} else {
+		query += " DESC"
+	}
+
+	/* 	Not really possible, from my testing, to get extraneous SQL commands to
+	execute on the server, but given the order_by part allows user input with errors
+	handled higher up it might potentially be possible for a malicious user to sneak
+	a semi-colon in and run a distinct SQL command, especially if the order of code
+	is moved around throughout development. Probably not necessary, but worth noting
+	something to do with security, especially since the API uses POST instead of GET.
+	*/
+	if illegalCharFlag {
+		// Do something  useful here, like flag user.
+		{
+		}
 	}
 
 	return query, args
