@@ -178,6 +178,17 @@ func (m *racesRepo) scanRaces(
 
 		race.AdvertisedStartTime = ts
 
+		/* 	Compare advertised start time of race to current timestamp.
+		If current time is after advertised start time, race is closed,
+		otherwise it is still open. All races in the databaseappear to
+		be circa 2021, so it is expected that they are all closed.
+		*/
+		if time.Now().After(time.Unix(ts.Seconds, int64(ts.Nanos))) {
+			race.Status = "CLOSED"
+		} else {
+			race.Status = "OPEN"
+		}
+
 		races = append(races, &race)
 	}
 
