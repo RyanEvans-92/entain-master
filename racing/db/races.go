@@ -19,6 +19,8 @@ type RacesRepo interface {
 
 	// List will return a list of races.
 	List(filter *racing.ListRacesRequestFilter) ([]*racing.Race, error)
+
+	GetRaceById(raceId int64) (*racing.Race, error)
 }
 
 type racesRepo struct {
@@ -41,6 +43,33 @@ func (r *racesRepo) Init() error {
 	})
 
 	return err
+}
+
+func (r *racesRepo) GetRaceById(raceId int64) (*racing.Race, error) {
+	var (
+		err   error
+		query string
+		args  []interface{}
+	)
+
+	query = getRaceQueries()[racesList]
+	query += " WHERE id = ?"
+
+	args = append(args, raceId)
+
+	rows, err := r.db.Query(query, args...)
+	if err != nil {
+		return nil, err
+	}
+
+	races, err := r.scanRaces(rows)
+	// If there is an error, or no races match this ID, return.
+	if err != nil || len(races) == 0 {
+		return nil, err
+	}
+
+	// If there is more than one race with the same ID, return only the first.
+	return races[0], nil
 }
 
 func (r *racesRepo) List(filter *racing.ListRacesRequestFilter) ([]*racing.Race, error) {
