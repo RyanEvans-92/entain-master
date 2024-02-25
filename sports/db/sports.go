@@ -163,7 +163,7 @@ func (m *eventsRepo) scanEvents(
 		var event sports.Event
 		var advertisedStart time.Time
 
-		if err := rows.Scan(&event.Id, &event.MeetingId, &event.Name, &event.Number, &event.Visible, &advertisedStart); err != nil {
+		if err := rows.Scan(&event.Id, &event.MeetingId, &event.Name, &event.Number, &event.Visible, &advertisedStart, &event.Level, &event.SoldOut); err != nil {
 			if err == sql.ErrNoRows {
 				return nil, nil
 			}
