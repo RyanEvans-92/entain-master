@@ -37,7 +37,7 @@ message Event {
   int64 id = 1;
   // MeetingID represents a unique identifier for the sporting event meeting.
   int64 meeting_id = 2;
-  // Name is the official name given to the event.
+  // Name is the official name of the sport being played at the event.
   string name = 3;
   // Number represents the number of the event.
   int64 number = 4;
@@ -47,5 +47,9 @@ message Event {
   google.protobuf.Timestamp advertised_start_time = 6;
   // Status is a state indicating whether a event is open or closed.
   string status = 7;
+  // Level of sport being played for the event.
+  string level = 8;
+  // Sold Out indicates if an event has any remaining tickets or not.
+  bool sold_out = 9;
 }
 
